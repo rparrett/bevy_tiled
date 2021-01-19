@@ -16,6 +16,8 @@ use bevy::{
 
 use crate::{loader::TiledMapLoader, TILE_MAP_PIPELINE_HANDLE, TileMapChunk};
 
+pub use tiled::ObjectShape;
+
 #[derive(Debug)]
 pub struct Tile {
     pub tile_id: u32,
@@ -388,8 +390,8 @@ pub struct TiledMapCenter(pub bool);
 pub struct ObjectGroup {
     name: String,
     opacity: f32,
-    visible: bool,
-    objects: Vec<Object>,
+    pub visible: bool,
+    pub objects: Vec<Object>,
 }
 
 
@@ -407,8 +409,8 @@ impl ObjectGroup {
 
 #[derive(Debug)]
 pub struct Object {
-    shape: tiled::ObjectShape,
-    position: Vec2,
+    pub shape: tiled::ObjectShape,
+    pub position: Vec2,
     gid: u32, // sprite ID from tiled::Object
     tileset_gid: Option<u32>, // AKA first_gid
     sprite_index: Option<u32>,
@@ -522,6 +524,11 @@ impl Default for TiledMapBundle {
             origin: Transform::default(),
         }
     }
+}
+
+#[derive(Default)]
+pub struct MapResourceProviderState {
+    pub map_event_reader: EventReader<AssetEvent<Map>>,
 }
 
 #[derive(Bundle)]
