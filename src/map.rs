@@ -407,7 +407,7 @@ impl ObjectGroup {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Object {
     pub shape: tiled::ObjectShape,
     pub position: Vec2,
@@ -425,6 +425,7 @@ impl Object {
             tileset_gid: None,
             sprite_index: None,
             position: Vec2::new(original_object.x, original_object.y),
+//            map_id: Handle<Map>
         }
     }
     pub fn create(original_object: &tiled::Object, tile_gids: &HashMap<u32, u32>) -> Object {
@@ -465,7 +466,7 @@ impl Object {
                         ..Default::default()
                     },
                     ..Default::default()
-                }).current_entity()
+                }).with(self.clone()).current_entity()
             }
             _ => {
                 panic!("Texture atlas, tilesset_gid, or sprite index missing!")
@@ -577,6 +578,8 @@ pub fn process_loaded_tile_maps(
     commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut map_events: EventReader<AssetEvent<Map>>,
+    mut state: Local<MapResourceProviderState>,
+    mut ready_events: ResMut<Events<ObjectReadyEvent>>,
     mut maps: ResMut<Assets<Map>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -748,6 +751,13 @@ pub fn process_loaded_tile_maps(
                                     &map.map,
                                     &tile_map_transform
                                 ) {
+                                    // when done spawning, fire event
+                                    let evt = ObjectReadyEvent {
+                                        map_handle: map_handle.clone(),
+                                        entity: entity.clone()
+                                    };
+                                    ready_events.send(evt);
+
                                     state.created_object_entities.entry(object.gid)
                                         .or_insert_with(|| Vec::new()).push(entity);
                                 }
@@ -762,4 +772,9 @@ pub fn process_loaded_tile_maps(
             }
         }
     }
+}
+
+pub struct ObjectReadyEvent {
+    pub map_handle: Handle<Map>,
+    pub entity: Entity
 }
