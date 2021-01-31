@@ -499,7 +499,7 @@ impl Object {
         texture_atlas: Option<&Handle<TextureAtlas>>,
         map: &tiled::Map,
         tile_map_transform: &Transform,
-        debug_material: Handle<ColorMaterial>,
+        debug_config: &DebugConfig,
     ) -> &'a mut Commands {
         if let Some(texture_atlas) = texture_atlas {
             let sprite_index = self.sprite_index.expect("missing sprite index");
@@ -535,10 +535,11 @@ impl Object {
             commands
                 // Debug box.
                 .spawn(SpriteBundle {
-                    material: debug_material,
+                    material: debug_config.material.clone().unwrap_or_else(|| Handle::<ColorMaterial>::default()),
                     sprite: Sprite::new(dimensions),
                     transform,
                     visible: Visible {
+                        is_visible: debug_config.enabled,
                         is_transparent: true,
                         ..Default::default()
                     },
@@ -661,7 +662,7 @@ pub fn process_loaded_tile_maps(
         &mut HashMap<u32, Handle<ColorMaterial>>,
         &mut HashMap<u32, Handle<TextureAtlas>>,
         &Transform,
-        &DebugConfig,
+        &mut DebugConfig,
     )>,
 ) {
     let mut changed_maps = HashSet::<Handle<Map>>::new();
@@ -745,7 +746,7 @@ pub fn process_loaded_tile_maps(
         }
     }
 
-    for (_, center, map_handle, materials_map, texture_atlas_map, origin, debug_config) in query.iter_mut() {
+    for (_, center, map_handle, materials_map, texture_atlas_map, origin, mut debug_config) in query.iter_mut() {
         if new_meshes.contains_key(map_handle) {
             let map = maps.get(map_handle).unwrap();
 
@@ -800,7 +801,9 @@ pub fn process_loaded_tile_maps(
                 }
             }
 
-            let debug_material = debug_config.material.clone().unwrap_or_else(|| materials.add(ColorMaterial::from(Color::rgba(0.4, 0.4, 0.9, 0.5))));
+            if debug_config.enabled && debug_config.material.is_none() {
+                debug_config.material = Some(materials.add(ColorMaterial::from(Color::rgba(0.4, 0.4, 0.9, 0.5))));
+            }
             for object_group in map.groups.iter() {
                 for object in object_group.objects.iter() {
                     state.created_object_entities.remove(&object.gid).map(|entities| {
@@ -826,7 +829,7 @@ pub fn process_loaded_tile_maps(
                             atlas_handle,
                             &map.map,
                             &tile_map_transform,
-                            debug_material.clone(),
+                            &debug_config,
                         )
                         .current_entity().map(|entity| {
                             // when done spawning, fire event
