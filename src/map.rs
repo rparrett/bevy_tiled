@@ -512,6 +512,7 @@ impl Object {
         commands: &'a mut Commands,
         texture_atlas: Option<&Handle<TextureAtlas>>,
         map: &tiled::Map,
+        map_handle: Handle<Map>,
         tile_map_transform: &Transform,
         debug_config: &DebugConfig,
     ) -> &'a mut Commands {
@@ -545,7 +546,6 @@ impl Object {
                     },
                     ..Default::default()
                 })
-                .with(self.clone())
         } else {
             // commands.spawn((self.map_transform(&map.map, &tile_map_transform, None), GlobalTransform::default()))
             let dimensions = self.dimensions().expect("Don't know how to handle object without dimensions");
@@ -563,8 +563,9 @@ impl Object {
                     },
                     ..Default::default()
                 })
-                .with(self.clone())
         }
+        .with(map_handle)
+        .with(self.clone())
     }
 
     pub fn dimensions(&self) -> Option<Vec2> {
@@ -633,6 +634,7 @@ pub struct CreatedMapEntities {
 
 #[derive(Bundle)]
 pub struct ChunkBundle {
+    pub map_parent: Handle<Map>, // tmp:chunks should be child entities of a toplevel map entity.
     pub chunk: TileMapChunk,
     pub main_pass: MainPass,
     pub material: Handle<ColorMaterial>,
@@ -647,6 +649,7 @@ pub struct ChunkBundle {
 impl Default for ChunkBundle {
     fn default() -> Self {
         Self {
+            map_parent: Handle::default(),
             chunk: TileMapChunk::default(),
             draw: Draw {
                 ..Default::default()
@@ -820,6 +823,7 @@ pub fn process_loaded_tile_maps(
                             },
                             material: material_handle.clone(),
                             mesh: mesh.clone(),
+                            map_parent: map_handle.clone(),
                             transform: tile_map_transform.clone(),
                             ..Default::default()
                         }).current_entity().map(|new_entity| {
@@ -858,6 +862,7 @@ pub fn process_loaded_tile_maps(
                             commands,
                             atlas_handle,
                             &map.map,
+                            map_handle.clone(),
                             &tile_map_transform,
                             &debug_config,
                         )
