@@ -2,7 +2,7 @@
 name = "bevy_tiled_prototype"
 description = "A plugin for rendering tiled maps."
 version = "0.1.0"
-authors = ["John Mitchell", "Bram Buurlage<brambuurlage@gmail.com>"]
+authors = ["John Mitchell", "Bram Buurlage<brambuurlage@gmail.com>", "mdan<dmtaub@gmail.com>"]
 homepage = "https://github.com/StarArawn/bevy_tiled"
 repository = "https://github.com/StarArawn/bevy_tiled"
 license-file = "LICENSE"

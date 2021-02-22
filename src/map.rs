@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io::BufReader, path::Path};
+use std::{collections::HashSet, io::BufReader, path::Path, path::PathBuf};
 
 use anyhow::Result;
 use bevy::{
@@ -15,7 +15,6 @@ use bevy::{
 };
 
 use crate::{loader::TiledMapLoader, TILE_MAP_PIPELINE_HANDLE, TileMapChunk};
-use std::{io::BufReader, path::{Path, PathBuf}};
 pub use tiled::ObjectShape;
 
 #[derive(Debug)]
@@ -619,11 +618,6 @@ impl Default for TiledMapBundle {
     }
 }
 
-#[derive(Default)]
-pub struct MapResourceProviderState {
-    map_event_reader: EventReader<AssetEvent<Map>>,
-}
-
 #[derive(Default, Debug)]
 pub struct CreatedMapEntities {
     // maps layer id and tileset_gid to mesh entities
@@ -678,7 +672,6 @@ pub fn process_loaded_tile_maps(
     commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut map_events: EventReader<AssetEvent<Map>>,
-    mut state: Local<MapResourceProviderState>,
     mut ready_events: ResMut<Events<ObjectReadyEvent>>,
     mut maps: ResMut<Assets<Map>>,
     mut meshes: ResMut<Assets<Mesh>>,
