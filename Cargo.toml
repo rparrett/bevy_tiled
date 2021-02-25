@@ -2,7 +2,7 @@
 name = "bevy_tiled_prototype"
 description = "A plugin for rendering tiled maps."
 version = "0.1.0"
-authors = ["John Mitchell", "Bram Buurlage<brambuurlage@gmail.com>", "mdan<dmtaub@gmail.com>"]
+authors = ["John Mitchell", "Bram Buurlage<brambuurlage@gmail.com>", "Rob Parrett", "mdan<dmtaub@gmail.com>"]
 homepage = "https://github.com/StarArawn/bevy_tiled"
 repository = "https://github.com/StarArawn/bevy_tiled"
 license-file = "LICENSE"
@@ -29,5 +29,5 @@ web = [
 
 [dependencies]
 anyhow = "1.0"
-bevy = { git = "https://github.com/bevyengine/bevy/", rev="1ca8ce4a799af8dab2d926366de9ac3c8d30939c", default-features=false }
-tiled = { git = "https://github.com/mattyhall/rs-tiled", rev="19c311231f1809491583c1e8e45b142d8ca3fa80", default-features = false }
+bevy = { git = "https://github.com/bevyengine/bevy/", branch="main", default-features = false }
+tiled = { git = "https://github.com/mattyhall/rs-tiled", branch="master", default-features = false }
