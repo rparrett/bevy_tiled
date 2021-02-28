@@ -18,11 +18,12 @@ fn main() {
 
 fn setup(commands: &mut Commands, asset_server: Res<AssetServer>) {
     
-    // let's pass in a parent to append map tiles to
+    // let's pass in a parent to append map tiles to, otherwise one will be created
     let parent = commands.spawn(
         (
             Transform { ..Default::default() },
-            GlobalTransform{ ..Default::default() }
+            GlobalTransform{ ..Default::default() },
+            Visible { ..Default::default() },
         )
     ).current_entity();
 
@@ -40,9 +41,9 @@ fn setup(commands: &mut Commands, asset_server: Res<AssetServer>) {
 fn move_parent_entity(
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<(&MapRoot, &mut Transform)>,
+    mut query: Query<(&MapRoot, &mut Visible, &mut Transform)>,
 ) {
-    for (_, mut transform) in query.iter_mut() {
+    for (_, mut _visible, mut transform) in query.iter_mut() {
         let mut direction = Vec3::zero();
 
         if keyboard_input.pressed(KeyCode::A) {
@@ -60,6 +61,11 @@ fn move_parent_entity(
         if keyboard_input.pressed(KeyCode::S) {
             direction -= Vec3::new(0.0, SCALE, 0.0);
         }
+
+        // this won't work right now :'-( -- https://github.com/bevyengine/bevy/issues/838
+        // if keyboard_input.just_released(KeyCode::Space) {
+        //     visible.is_visible = !visible.is_visible;
+        // }
 
         transform.translation += time.delta_seconds() * direction * 1000.;
         transform.scale = Vec3::splat(SCALE);
