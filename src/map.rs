@@ -574,7 +574,7 @@ impl Object {
             tiled::ObjectShape::Ellipse { width , height } => Some(Vec2::new(width, height)),
             tiled::ObjectShape::Polyline { points: _ } |
             tiled::ObjectShape::Polygon { points: _ } |
-            tiled::ObjectShape::Point(_, _) => None,
+            tiled::ObjectShape::Point(_, _) => Some(Vec2::new(1.0, 1.0)),
         }
     }
 }
@@ -889,6 +889,7 @@ pub fn process_loaded_tile_maps(
                             // when done spawning, fire event
                             let evt = ObjectReadyEvent {
                                 map_handle: map_handle.clone(),
+                                map_entity_option: optional_parent.clone(),
                                 entity: entity.clone()
                             };
                             ready_events.send(evt);
@@ -907,6 +908,7 @@ pub fn process_loaded_tile_maps(
         }
         let evt = MapReadyEvent {
             map_handle: map_handle.clone(),
+            map_entity_option: optional_parent.clone(),
         };
         map_ready_events.send(evt);
     }
@@ -916,9 +918,11 @@ pub fn process_loaded_tile_maps(
 
 pub struct ObjectReadyEvent {
     pub map_handle: Handle<Map>,
+    pub map_entity_option: Option<Entity>,
     pub entity: Entity
 }
 
 pub struct MapReadyEvent {
     pub map_handle: Handle<Map>,
+    pub map_entity_option: Option<Entity>,
 }
