@@ -597,6 +597,7 @@ impl Default for DebugConfig {
 #[derive(Bundle)]
 pub struct TiledMapBundle {
     pub map_asset: Handle<Map>,
+    pub parent_option: Option<Entity>,
     pub materials: HashMap<u32, Handle<ColorMaterial>>,
     pub atlases: HashMap<u32, Handle<TextureAtlas>>,
     pub origin: Transform,
@@ -605,10 +606,13 @@ pub struct TiledMapBundle {
     pub created_entities: CreatedMapEntities,
 }
 
+pub struct MapRoot; // used so consuming application can query for parent
+
 impl Default for TiledMapBundle {
     fn default() -> Self {
         Self {
             map_asset: Handle::default(),
+            parent_option: None,
             materials: HashMap::default(),
             atlases: HashMap::default(),
             center: TiledMapCenter::default(),
@@ -683,6 +687,7 @@ pub fn process_loaded_tile_maps(
         Entity,
         &TiledMapCenter,
         &Handle<Map>,
+        &Option<Entity>,
         &mut HashMap<u32, Handle<ColorMaterial>>,
         &mut HashMap<u32, Handle<TextureAtlas>>,
         &Transform,
@@ -716,7 +721,7 @@ pub fn process_loaded_tile_maps(
             continue;
         };
 
-        for (_, _, map_handle, mut materials_map, mut texture_atlas_map, _, _, _) in query.iter_mut() {
+        for (_, _, map_handle, _, mut materials_map, mut texture_atlas_map, _, _, _) in query.iter_mut() {
             // only deal with currently changed map
             if map_handle != changed_map { continue; }
 
@@ -774,7 +779,7 @@ pub fn process_loaded_tile_maps(
         }
     }
 
-    for (_, center, map_handle, materials_map, texture_atlas_map, origin, mut debug_config, mut created_entities) in query.iter_mut() {
+    for (_, center, map_handle, optional_parent, materials_map, texture_atlas_map, origin, mut debug_config, mut created_entities) in query.iter_mut() {
         if new_meshes.contains_key(map_handle) {
             let map = maps.get(map_handle).unwrap();
 
@@ -806,12 +811,15 @@ pub fn process_loaded_tile_maps(
                             commands.despawn(*entity);
                         }
                     });
+
+                    let mut chunk_entities: Vec<Entity> = Default::default();
                     for (_, tileset_guid, mesh) in chunk_mesh_list.iter() {
                         // TODO: Sadly bevy doesn't support multiple meshes on a single entity with multiple materials.
                         // Change this once it does.
 
                         // Instead for now spawn a new entity per chunk.
-                        commands.spawn(ChunkBundle {
+                        // if calling code passes in optional_entity, append as children to that
+                        let chunk_entity = commands.spawn(ChunkBundle {
                             chunk: TileMapChunk {
                                 // TODO: Support more layers here..
                                 layer_id: layer_id as f32,
@@ -821,11 +829,20 @@ pub fn process_loaded_tile_maps(
                             map_parent: map_handle.clone(),
                             transform: tile_map_transform.clone(),
                             ..Default::default()
-                        }).current_entity().map(|new_entity| {
+                        }).current_entity();
+
+                        if let Some(new_entity) = chunk_entity {
                             // println!("added created_entry after spawn");
                             created_entities.created_layer_entities.entry((layer_id, *tileset_guid))
                                 .or_insert_with(|| Vec::new()).push(new_entity);
-                        });
+                            chunk_entities.push(new_entity);
+                        };
+                    }
+                    // if parent was passed in, mark it and add children
+                    if let Some(parent_entity) = optional_parent {
+                        commands
+                            .insert_one(parent_entity.clone(), MapRoot)
+                            .push_children(parent_entity.clone(), &chunk_entities);
                     }
                 }
             }
