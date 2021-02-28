@@ -608,6 +608,7 @@ pub struct TiledMapBundle {
 
 pub struct MapRoot; // used so consuming application can query for parent
 
+// For now this is a configuration object. If you want a top-level map entity, you need to pass it in
 impl Default for TiledMapBundle {
     fn default() -> Self {
         Self {
@@ -783,6 +784,9 @@ pub fn process_loaded_tile_maps(
         if new_meshes.contains_key(map_handle) {
             let map = maps.get(map_handle).unwrap();
 
+            // if parent was passed in, mark it as a MapRoot (temporary until map bundle returns real entity)
+            optional_parent.map(|entity| commands.insert_one(entity, MapRoot));
+
             let tile_map_transform = if center.0 {
                 map.center(origin.clone())
             } else {
@@ -833,15 +837,15 @@ pub fn process_loaded_tile_maps(
 
                         if let Some(new_entity) = chunk_entity {
                             // println!("added created_entry after spawn");
+                            // TODO: combine these next two:
                             created_entities.created_layer_entities.entry((layer_id, *tileset_guid))
                                 .or_insert_with(|| Vec::new()).push(new_entity);
                             chunk_entities.push(new_entity);
                         };
                     }
-                    // if parent was passed in, mark it and add children
+                    // if parent was passed in add children
                     if let Some(parent_entity) = optional_parent {
                         commands
-                            .insert_one(parent_entity.clone(), MapRoot)
                             .push_children(parent_entity.clone(), &chunk_entities);
                     }
                 }
@@ -863,6 +867,9 @@ pub fn process_loaded_tile_maps(
                 if !object_group.visible {
                     continue;
                 }
+
+                let mut object_entities: Vec<Entity> = Default::default();
+
                 // TODO: use object_group.name, opacity, colour (properties)
                 for object in object_group.objects.iter() {
                     // println!("in object_group {}, object {:?}, grp: {}", object_group.name, &object.tileset_gid, object.gid);
@@ -888,7 +895,13 @@ pub fn process_loaded_tile_maps(
 
                             created_entities.created_object_entities.entry(object.gid)
                                 .or_insert_with(|| Vec::new()).push(entity);
+                            object_entities.push(entity);
                         });
+                }
+                // if parent was passed in add children
+                if let Some(parent_entity) = optional_parent {
+                    commands
+                        .push_children(parent_entity.clone(), &object_entities);
                 }
             }
         }
