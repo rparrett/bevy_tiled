@@ -495,8 +495,9 @@ impl Object {
 
                     }
                     // tiled::Orientation::Isometric => {
+
                     // }
-                    _ => panic!("Unsupported orientation for object {:?}", map_orientation),
+                    _ => panic!("Sorry, {:?} objects aren't supported -- please hide this object layer for now.", map_orientation),
                 }
             }
             tiled::ObjectShape::Ellipse { width: _ , height: _ } => {}

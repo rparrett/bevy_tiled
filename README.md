@@ -6,11 +6,11 @@ Feel free to use this code as a reference for your own custom tile mapping solut
 
 ## Toplevel Entity Support
 
-For now, TiledMapBundle is a configuration object. If you would like access to a toplevel entity that can be transformed, pass into the configuration:
+For now, TiledMapBundle is just a configuration object. If you would like access to a toplevel entity that can be transformed, pass into the configuration:
 
     parent_option: Some(entity)
 
-Then, map objects will be inserted as children to this entity, which will be tagged with MapRoot. This API is likely to change.
+Then, both chunks and objects will be inserted as children to this entity, which will be tagged with MapRoot. This API is likely to change.
 ## Object Layer Support
 
 Object layers are now supported. They will be skipped if not visible. Individual objects that are invisible
@@ -44,3 +44,11 @@ Limited support for hot reload is provided. Old entities are removed based on th
     asset_server.watch_for_changes().expect("watch for changes failed");
 
 Then when you save your map, it should update in the application.
+
+## Top-needed features
+
+  * support for iso maps
+  * support for objects in tiles
+  * support for embedded images
+
+  
